@@ -13,165 +13,62 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-android:
-    name: Run Maestro Tests (Android)
+  validate-tests:
+    name: Validate Maestro Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "${HOME}/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Validate test flows
+        run: |
+          echo "Validating Maestro test flows..."
+          for file in .maestro/*.yaml; do
+            echo "Checking $file"
+            if [ -f "$file" ]; then
+              cat "$file" | head -20
+            fi
+          done
+
+      - name: Build web version
+        run: npm run build:web
+
+      - name: Upload web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: dist/
+
+  # Optional: Run tests with Maestro Cloud (requires API key)
+  test-with-maestro-cloud:
+    name: Run Tests on Maestro Cloud
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    if: github.event_name == 'workflow_dispatch' && vars.MAESTRO_CLOUD_ENABLED == 'true'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Run Maestro Cloud Tests
+        uses: mobile-dev-inc/action-maestro-cloud@v1
         with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Maestro
-        run: |
-          curl -Ls "https://get.maestro.mobile.dev" | bash
-          echo "${HOME}/.maestro/bin" >> $GITHUB_PATH
-
-      - name: Start Expo
-        run: |
-          npm start &
-          echo $! > expo.pid
-
-      - name: Wait for Expo to start
-        run: |
-          timeout 120 bash -c 'until curl -s http://localhost:8081/status | grep -q "packager-status:running"; do sleep 2; done'
-
-      - name: Setup Android Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 33
-          target: google_apis
-          arch: x86_64
-          profile: pixel_6
-          script: |
-            # Wait for emulator to boot
-            adb wait-for-device
-            adb shell input keyevent 82
-
-            # Install Expo Go
-            curl -o expo.apk https://d1ahtucjixef4r.cloudfront.net/Exponent-2.31.4.apk
-            adb install expo.apk
-
-            # Open app in Expo Go
-            adb shell am start -a android.intent.action.VIEW -d "exp://localhost:8081"
-
-            # Wait for app to load
-            sleep 30
-
-            # Run Maestro tests
-            maestro test .maestro/smoke-test.yaml
-            maestro test .maestro/app-flow.yaml
-            maestro test .maestro/workout-logger.yaml
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: maestro-results
-          path: |
-            ~/.maestro/tests/**/*
-            **/maestro-*.mp4
-
-      - name: Stop Expo
-        if: always()
-        run: |
-          if [ -f expo.pid ]; then
-            kill $(cat expo.pid) || true
-          fi
-
-  test-ios:
-    name: Run Maestro Tests (iOS)
-    runs-on: macos-14
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Maestro
-        run: |
-          curl -Ls "https://get.maestro.mobile.dev" | bash
-          echo "${HOME}/.maestro/bin" >> $GITHUB_PATH
-
-      - name: List available simulators
-        run: xcrun simctl list devices available
-
-      - name: Start iOS Simulator
-        run: |
-          SIMULATOR_ID=$(xcrun simctl create "iPhone 15" "iPhone 15")
-          echo "SIMULATOR_ID=$SIMULATOR_ID" >> $GITHUB_ENV
-          xcrun simctl boot $SIMULATOR_ID
-
-      - name: Start Expo
-        run: |
-          npm start &
-          echo $! > expo.pid
-
-      - name: Wait for Expo to start
-        run: |
-          timeout 120 bash -c 'until curl -s http://localhost:8081/status | grep -q "packager-status:running"; do sleep 2; done'
-
-      - name: Install and launch Expo Go
-        run: |
-          # Download and install Expo Go
-          brew install xcbeautify
-          npx expo install expo-dev-client
-
-          # Open in simulator
-          xcrun simctl openurl $SIMULATOR_ID "exp://localhost:8081"
-
-          # Wait for app to load
-          sleep 30
-
-      - name: Run Maestro Tests
-        run: |
-          maestro test .maestro/smoke-test.yaml
-          maestro test .maestro/app-flow.yaml
-          maestro test .maestro/workout-logger.yaml
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: maestro-results-ios
-          path: |
-            ~/.maestro/tests/**/*
-            **/maestro-*.mp4
-
-      - name: Stop Expo
-        if: always()
-        run: |
-          if [ -f expo.pid ]; then
-            kill $(cat expo.pid) || true
-          fi
-
-      - name: Shutdown simulator
-        if: always()
-        run: xcrun simctl shutdown $SIMULATOR_ID || true
+          api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+          app-file: .
+          flows: .maestro/

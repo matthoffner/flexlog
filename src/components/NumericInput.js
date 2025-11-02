@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
-export const NumericInput = ({ label, value, onChangeText, placeholder, unit }) => {
+export const NumericInput = ({ label, value, onChangeText, placeholder, unit, testID }) => {
+  const inputTestID = testID || label?.toLowerCase().replace(/\s+/g, '-');
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
@@ -12,6 +14,8 @@ export const NumericInput = ({ label, value, onChangeText, placeholder, unit }) 
           onChangeText={onChangeText}
           placeholder={placeholder}
           keyboardType="numeric"
+          testID={inputTestID}
+          accessibilityLabel={label}
         />
         {unit && <Text style={styles.unit}>{unit}</Text>}
       </View>

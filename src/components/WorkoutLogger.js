@@ -45,6 +45,8 @@ export const WorkoutLogger = ({ onAddWorkout, workouts = [] }) => {
           onChangeText={setExercise}
           placeholder="Exercise name"
           placeholderTextColor="#999"
+          testID="exercise-name-input"
+          accessibilityLabel="Exercise name"
         />
 
         <View style={styles.row}>
@@ -55,6 +57,8 @@ export const WorkoutLogger = ({ onAddWorkout, workouts = [] }) => {
             placeholder="Sets"
             placeholderTextColor="#999"
             keyboardType="numeric"
+            testID="sets-input"
+            accessibilityLabel="Sets"
           />
           <TextInput
             style={[styles.input, styles.smallInput]}
@@ -63,6 +67,8 @@ export const WorkoutLogger = ({ onAddWorkout, workouts = [] }) => {
             placeholder="Reps"
             placeholderTextColor="#999"
             keyboardType="numeric"
+            testID="reps-input"
+            accessibilityLabel="Reps"
           />
           <TextInput
             style={[styles.input, styles.smallInput]}
@@ -71,10 +77,17 @@ export const WorkoutLogger = ({ onAddWorkout, workouts = [] }) => {
             placeholder="Weight (lbs)"
             placeholderTextColor="#999"
             keyboardType="numeric"
+            testID="weight-input"
+            accessibilityLabel="Weight"
           />
         </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAdd}
+          testID="add-exercise-button"
+          accessibilityLabel="Add Exercise"
+        >
           <Text style={styles.addButtonText}>Add Exercise</Text>
         </TouchableOpacity>
       </View>

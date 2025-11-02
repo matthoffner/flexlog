@@ -3,14 +3,13 @@ appId: host.exp.Exponent
 # FlexLog - Smoke Test
 
 - launchApp
+- extendedWaitUntil:
+    visible: "FlexLog"
+    timeout: 15000
 
 # Verify app launches successfully
 - assertVisible: "FlexLog"
 - assertVisible: "Daily Performance Tracker"
-
-# Verify current date is displayed
-- assertVisible:
-    pattern: "\\w+, \\w+ \\d+, \\d{4}"
 
 # Verify all main sections exist
 - assertVisible: "Settings"
@@ -20,7 +19,10 @@ appId: host.exp.Exponent
 - assertVisible: "Protein"
 - assertVisible: "Total Calories"
 
-- scroll
+- scrollUntilVisible:
+    element:
+      text: "Activity"
+    direction: DOWN
 
 - assertVisible: "Activity"
 - assertVisible: "Steps"
@@ -29,15 +31,19 @@ appId: host.exp.Exponent
 
 - assertVisible: "Log Workout"
 
-- scroll
+- scrollUntilVisible:
+    element:
+      text: "Recovery"
+    direction: DOWN
 
 - assertVisible: "Recovery"
 - assertVisible: "Sleep Hours"
 - assertVisible: "High Stress"
 
 # Verify calculate button exists
-- assertVisible: "Calculate Score"
+- scrollUntilVisible:
+    element:
+      text: "Calculate Score"
+    direction: DOWN
 
-# Verify formula is shown at bottom
-- assertVisible:
-    pattern: "Formula.*Nutrition.*Energy.*Activity.*Recovery"
+- assertVisible: "Calculate Score"

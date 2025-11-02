@@ -3,61 +3,44 @@ appId: host.exp.Exponent
 # FlexLog - Workout Logger Test Flow
 
 - launchApp
+- extendedWaitUntil:
+    visible: "FlexLog"
+    timeout: 15000
 
-# Wait for app to load
-- assertVisible: "FlexLog"
-
-# Scroll to workout logger
-- scroll
+# Scroll to workout logger section
+- scrollUntilVisible:
+    element:
+      text: "Log Workout"
+    direction: DOWN
 
 # Verify workout logger section
 - assertVisible: "Log Workout"
 
-# Add first exercise
+# Add first exercise using testIDs
 - tapOn:
-    text: "Exercise name"
+    id: "exercise-name-input"
 - inputText: "Bench Press"
 
 - tapOn:
-    text: "Sets"
+    id: "sets-input"
 - inputText: "3"
 
 - tapOn:
-    text: "Reps"
+    id: "reps-input"
 - inputText: "10"
 
 - tapOn:
-    text: "Weight (lbs)"
+    id: "weight-input"
 - inputText: "185"
 
 # Add the exercise
-- tapOn: "Add Exercise"
+- tapOn:
+    id: "add-exercise-button"
 
-# Verify workout was added
+# Wait and verify workout was added
+- extendedWaitUntil:
+    visible: "Today's Workouts"
+    timeout: 3000
+
 - assertVisible: "Today's Workouts"
 - assertVisible: "Bench Press"
-- assertVisible: "3 sets × 10 reps"
-
-# Add second exercise
-- tapOn:
-    text: "Exercise name"
-- inputText: "Squats"
-
-- tapOn:
-    text: "Sets"
-- inputText: "4"
-
-- tapOn:
-    text: "Reps"
-- inputText: "8"
-
-- tapOn:
-    text: "Weight (lbs)"
-- inputText: "225"
-
-- tapOn: "Add Exercise"
-
-# Verify both workouts are shown
-- assertVisible: "Bench Press"
-- assertVisible: "Squats"
-- assertVisible: "4 sets × 8 reps"

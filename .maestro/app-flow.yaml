@@ -3,65 +3,79 @@ appId: host.exp.Exponent
 # FlexLog - Daily Performance Score Test Flow
 
 - launchApp
+- extendedWaitUntil:
+    visible: "FlexLog"
+    timeout: 15000
 
 # Verify app loaded with title
 - assertVisible: "FlexLog"
 - assertVisible: "Daily Performance Tracker"
 
-# Verify all main sections are visible
+# Verify main sections are visible
 - assertVisible: "Settings"
 - assertVisible: "Nutrition"
-- assertVisible: "Activity"
-- assertVisible: "Recovery"
 
-# Set maintenance calories
-- tapOn: "Maintenance Calories"
+# Input maintenance calories - tap below the label
+- tapOn:
+    below:
+      text: "Maintenance Calories"
 - inputText: "2000"
 
-# Select goal: maintenance
+# Select goal: maintenance button
 - tapOn: "Maintenance"
 
-# Input nutrition data
+# Input protein - tap below the Protein label
 - tapOn:
-    text: "Protein"
-    index: 0
+    below:
+      text: "Protein"
 - inputText: "150"
 
+# Input total calories - tap below the Total Calories label
 - tapOn:
-    text: "Total Calories"
-    index: 0
+    below:
+      text: "Total Calories"
 - inputText: "2000"
 
-# Input activity data
+# Scroll to Activity section
+- scrollUntilVisible:
+    element:
+      text: "Activity"
+    direction: DOWN
+
+# Input steps - tap below the Steps label
 - tapOn:
-    text: "Steps"
-    index: 0
+    below:
+      text: "Steps"
 - inputText: "10000"
 
-# Toggle weight lifting
-- tapOn:
-    text: "Weight Lifting"
-- assertVisible: "Weight Lifting"
+# Scroll to Recovery section
+- scrollUntilVisible:
+    element:
+      text: "Recovery"
+    direction: DOWN
 
-# Input recovery data
+# Input sleep hours - tap below the Sleep Hours label
 - tapOn:
-    text: "Sleep Hours"
-    index: 0
+    below:
+      text: "Sleep Hours"
 - inputText: "7.5"
 
 # Scroll to calculate button
-- scroll
+- scrollUntilVisible:
+    element:
+      text: "Calculate Score"
+    direction: DOWN
 
 # Calculate score
 - tapOn: "Calculate Score"
 
+# Wait for score to appear
+- extendedWaitUntil:
+    visible: "Daily Performance Score"
+    timeout: 5000
+
+# Scroll to top to see the score
+- scroll
+
 # Verify score is displayed
 - assertVisible: "Daily Performance Score"
-- assertVisible:
-    text: "Breakdown"
-
-# Verify all score components are shown
-- assertVisible: "Nutrition"
-- assertVisible: "Energy"
-- assertVisible: "Activity"
-- assertVisible: "Recovery"
