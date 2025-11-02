@@ -152,12 +152,23 @@ maestro test --format junit .maestro/app-flow.yaml
 
 #### CI/CD Testing
 
-Tests run automatically in GitHub Actions:
-- On every push to main/master or PR
-- On claude/* branches (for development)
-- Manual trigger via workflow_dispatch
+The CI workflow validates Maestro tests and builds the web version:
+- Validates test flow YAML syntax
+- Builds web version for deployment
+- Uploads web build artifacts
 
-Test artifacts (screenshots, videos) are uploaded to GitHub Actions artifacts.
+**Running Full Tests in CI:**
+
+For complete E2E testing with Maestro Cloud (optional):
+1. Sign up for [Maestro Cloud](https://cloud.mobile.dev/)
+2. Add `MAESTRO_CLOUD_API_KEY` to repository secrets
+3. Set repository variable `MAESTRO_CLOUD_ENABLED=true`
+4. Manually trigger workflow via workflow_dispatch
+
+Tests can be run on:
+- Every push to main/master or PR
+- claude/* branches (for development)
+- Manual workflow dispatch
 
 ## Technologies
 
