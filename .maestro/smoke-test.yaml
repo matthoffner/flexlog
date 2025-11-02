@@ -1,0 +1,43 @@
+appId: host.exp.Exponent
+---
+# FlexLog - Smoke Test
+
+- launchApp
+
+# Verify app launches successfully
+- assertVisible: "FlexLog"
+- assertVisible: "Daily Performance Tracker"
+
+# Verify current date is displayed
+- assertVisible:
+    pattern: "\\w+, \\w+ \\d+, \\d{4}"
+
+# Verify all main sections exist
+- assertVisible: "Settings"
+- assertVisible: "Maintenance Calories"
+
+- assertVisible: "Nutrition"
+- assertVisible: "Protein"
+- assertVisible: "Total Calories"
+
+- scroll
+
+- assertVisible: "Activity"
+- assertVisible: "Steps"
+- assertVisible: "Weight Lifting"
+- assertVisible: "Cardio"
+
+- assertVisible: "Log Workout"
+
+- scroll
+
+- assertVisible: "Recovery"
+- assertVisible: "Sleep Hours"
+- assertVisible: "High Stress"
+
+# Verify calculate button exists
+- assertVisible: "Calculate Score"
+
+# Verify formula is shown at bottom
+- assertVisible:
+    pattern: "Formula.*Nutrition.*Energy.*Activity.*Recovery"

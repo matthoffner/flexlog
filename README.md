@@ -82,11 +82,90 @@ flexlog/
 └── package.json
 ```
 
+## Web Deployment
+
+The app can be deployed as a web application using GitHub Pages or any static hosting service.
+
+### Build for Web
+
+```bash
+# Build static web app
+npm run build:web
+
+# Serve locally for testing
+npm run serve
+```
+
+The built files will be in the `dist/` directory.
+
+### Automated Deployment
+
+The app includes GitHub Actions workflows for:
+
+1. **Web Deployment** (`.github/workflows/deploy-web.yml`):
+   - Automatically deploys to GitHub Pages on push to main/master
+   - Builds the web version and publishes it
+   - Requires GitHub Pages to be enabled in repository settings
+
+2. **Maestro Tests** (`.github/workflows/maestro-tests.yml`):
+   - Runs automated UI tests on Android and iOS
+   - Executes on every push and pull request
+   - Tests smoke tests, main flow, and workout logger
+
+## Testing
+
+### Maestro E2E Tests
+
+The app includes comprehensive UI tests using [Maestro](https://maestro.mobile.dev/).
+
+#### Test Files
+
+- `.maestro/smoke-test.yaml` - Quick smoke test to verify app launches
+- `.maestro/app-flow.yaml` - Complete user flow test
+- `.maestro/workout-logger.yaml` - Workout logging functionality test
+
+#### Running Tests Locally
+
+1. Install Maestro:
+```bash
+curl -Ls "https://get.maestro.mobile.dev" | bash
+```
+
+2. Start the app:
+```bash
+npm start
+```
+
+3. Open app on simulator/emulator or device
+
+4. Run tests:
+```bash
+# Run all tests
+maestro test .maestro/
+
+# Run specific test
+maestro test .maestro/smoke-test.yaml
+
+# Run with recording
+maestro test --format junit .maestro/app-flow.yaml
+```
+
+#### CI/CD Testing
+
+Tests run automatically in GitHub Actions:
+- On every push to main/master or PR
+- On claude/* branches (for development)
+- Manual trigger via workflow_dispatch
+
+Test artifacts (screenshots, videos) are uploaded to GitHub Actions artifacts.
+
 ## Technologies
 
 - React Native
 - Expo
 - AsyncStorage for local data persistence
+- Maestro for E2E testing
+- GitHub Actions for CI/CD
 
 ## License
 

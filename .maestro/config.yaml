@@ -1,0 +1,13 @@
+# Maestro Configuration
+env:
+  APP_ID: host.exp.Exponent
+  TIMEOUT: 15000
+
+# Optional: Set default platform
+# platform: android
+
+# Optional: Configure test execution
+tags:
+  - smoke
+  - e2e
+  - ui

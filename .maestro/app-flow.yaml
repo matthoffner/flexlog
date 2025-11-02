@@ -1,0 +1,67 @@
+appId: host.exp.Exponent
+---
+# FlexLog - Daily Performance Score Test Flow
+
+- launchApp
+
+# Verify app loaded with title
+- assertVisible: "FlexLog"
+- assertVisible: "Daily Performance Tracker"
+
+# Verify all main sections are visible
+- assertVisible: "Settings"
+- assertVisible: "Nutrition"
+- assertVisible: "Activity"
+- assertVisible: "Recovery"
+
+# Set maintenance calories
+- tapOn: "Maintenance Calories"
+- inputText: "2000"
+
+# Select goal: maintenance
+- tapOn: "Maintenance"
+
+# Input nutrition data
+- tapOn:
+    text: "Protein"
+    index: 0
+- inputText: "150"
+
+- tapOn:
+    text: "Total Calories"
+    index: 0
+- inputText: "2000"
+
+# Input activity data
+- tapOn:
+    text: "Steps"
+    index: 0
+- inputText: "10000"
+
+# Toggle weight lifting
+- tapOn:
+    text: "Weight Lifting"
+- assertVisible: "Weight Lifting"
+
+# Input recovery data
+- tapOn:
+    text: "Sleep Hours"
+    index: 0
+- inputText: "7.5"
+
+# Scroll to calculate button
+- scroll
+
+# Calculate score
+- tapOn: "Calculate Score"
+
+# Verify score is displayed
+- assertVisible: "Daily Performance Score"
+- assertVisible:
+    text: "Breakdown"
+
+# Verify all score components are shown
+- assertVisible: "Nutrition"
+- assertVisible: "Energy"
+- assertVisible: "Activity"
+- assertVisible: "Recovery"

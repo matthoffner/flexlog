@@ -1,0 +1,7 @@
+# Files to ignore during Maestro tests
+node_modules/
+.git/
+dist/
+build/
+.expo/
+*.log
