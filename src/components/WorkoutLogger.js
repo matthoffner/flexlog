@@ -1,11 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 
-export const WorkoutLogger = ({ onAddWorkout, workouts = [] }) => {
+export const WorkoutLogger = ({ onAddWorkout, workouts = [], activityNames = [] }) => {
   const [exercise, setExercise] = useState('');
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
   const [weight, setWeight] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (exercise.length > 0) {
+      const filtered = activityNames.filter(name =>
+        name.toLowerCase().includes(exercise.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0 && filtered[0].toLowerCase() !== exercise.toLowerCase());
+    } else {
+      setFilteredSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [exercise, activityNames]);
 
   const handleAdd = () => {
     if (exercise && sets && reps) {
@@ -21,7 +36,13 @@ export const WorkoutLogger = ({ onAddWorkout, workouts = [] }) => {
       setSets('');
       setReps('');
       setWeight('');
+      setShowSuggestions(false);
     }
+  };
+
+  const handleSuggestionPress = (suggestion) => {
+    setExercise(suggestion);
+    setShowSuggestions(false);
   };
 
   const renderWorkout = ({ item }) => (
@@ -48,6 +69,20 @@ export const WorkoutLogger = ({ onAddWorkout, workouts = [] }) => {
           testID="exercise-name-input"
           accessibilityLabel="Exercise name"
         />
+
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <View style={styles.suggestionsContainer}>
+            {filteredSuggestions.slice(0, 5).map((suggestion, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.suggestionItem}
+                onPress={() => handleSuggestionPress(suggestion)}
+              >
+                <Text style={styles.suggestionText}>{suggestion}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <View style={styles.row}>
           <TextInput
@@ -178,5 +213,21 @@ const styles = StyleSheet.create({
   workoutDetails: {
     fontSize: 14,
     color: '#666',
+  },
+  suggestionsContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  suggestionItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  suggestionText: {
+    fontSize: 16,
+    color: '#2196F3',
   },
 });

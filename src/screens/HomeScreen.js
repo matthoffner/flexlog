@@ -12,10 +12,19 @@ import { StatusBar } from 'expo-status-bar';
 import { NumericInput } from '../components/NumericInput';
 import { ScoreDisplay } from '../components/ScoreDisplay';
 import { WorkoutLogger } from '../components/WorkoutLogger';
+import { NutritionLogger } from '../components/NutritionLogger';
+import { WeeklyGoals } from '../components/WeeklyGoals';
+import { Badges } from '../components/Badges';
 import { DateNavigation } from '../components/DateNavigation';
 import { DailyComparison } from '../components/DailyComparison';
 import { TrendChart } from '../components/TrendChart';
 import { calculateDailyPerformanceScore } from '../utils/scoreCalculator';
+import {
+  calculateWeeklyProgress,
+  checkGoalsComplete,
+  calculateConsecutiveWeeks,
+  awardBadgeIfEligible
+} from '../utils/goalTracker';
 import {
   saveDailyLog,
   getDailyLog,
@@ -23,7 +32,16 @@ import {
   saveUserSettings,
   getUserSettings,
   saveWorkout,
-  getWorkoutsForDate
+  getWorkoutsForDate,
+  saveNutritionLog,
+  getNutritionLogsForDate,
+  getNutritionLogs,
+  getWorkouts,
+  getUniqueActivityNames,
+  getWeeklyGoals,
+  saveWeeklyGoals,
+  getBadges,
+  saveBadges
 } from '../utils/storage';
 
 export const HomeScreen = () => {
@@ -46,6 +64,27 @@ export const HomeScreen = () => {
 
   // Workouts
   const [workouts, setWorkouts] = useState([]);
+  const [activityNames, setActivityNames] = useState([]);
+
+  // Nutrition logs
+  const [nutritionLogs, setNutritionLogs] = useState([]);
+
+  // Weekly goals
+  const [weeklyGoals, setWeeklyGoals] = useState({
+    workouts: 0,
+    totalReps: 0,
+    protein: 0,
+    calories: 0
+  });
+  const [weeklyProgress, setWeeklyProgress] = useState({
+    workouts: 0,
+    totalReps: 0,
+    protein: 0,
+    calories: 0
+  });
+
+  // Badges
+  const [badges, setBadges] = useState([]);
 
   // Score
   const [scoreData, setScoreData] = useState(null);
@@ -107,6 +146,38 @@ export const HomeScreen = () => {
     // Load workouts
     const dayWorkouts = await getWorkoutsForDate(date);
     setWorkouts(dayWorkouts);
+
+    // Load activity names for autocomplete
+    const names = await getUniqueActivityNames();
+    setActivityNames(names);
+
+    // Load nutrition logs
+    const dayNutrition = await getNutritionLogsForDate(date);
+    setNutritionLogs(dayNutrition);
+
+    // Load weekly goals
+    const goals = await getWeeklyGoals();
+    setWeeklyGoals(goals);
+
+    // Calculate weekly progress
+    const allWorkouts = await getWorkouts();
+    const allNutrition = await getNutritionLogs();
+    const progress = calculateWeeklyProgress(allWorkouts, allNutrition);
+    setWeeklyProgress(progress);
+
+    // Load badges
+    const userBadges = await getBadges();
+    setBadges(userBadges);
+
+    // Check and award badges if goals are complete
+    if (checkGoalsComplete(progress, goals)) {
+      const consecutiveWeeks = calculateConsecutiveWeeks(allWorkouts, allNutrition, goals);
+      const updatedBadges = awardBadgeIfEligible(userBadges, consecutiveWeeks);
+      if (updatedBadges.length > userBadges.length) {
+        setBadges(updatedBadges);
+        await saveBadges(updatedBadges);
+      }
+    }
   };
 
   const handleCalculateScore = async () => {
@@ -143,6 +214,33 @@ export const HomeScreen = () => {
     const updatedWorkouts = await getWorkoutsForDate(date);
     setWorkouts(updatedWorkouts);
     setDidLift(true); // Auto-set lift toggle when workout is added
+
+    // Refresh activity names for autocomplete
+    const names = await getUniqueActivityNames();
+    setActivityNames(names);
+
+    // Recalculate weekly progress
+    const allWorkouts = await getWorkouts();
+    const allNutrition = await getNutritionLogs();
+    const progress = calculateWeeklyProgress(allWorkouts, allNutrition);
+    setWeeklyProgress(progress);
+  };
+
+  const handleAddNutrition = async (nutrition) => {
+    await saveNutritionLog(date, nutrition);
+    const updatedNutrition = await getNutritionLogsForDate(date);
+    setNutritionLogs(updatedNutrition);
+
+    // Recalculate weekly progress
+    const allWorkouts = await getWorkouts();
+    const allNutrition = await getNutritionLogs();
+    const progress = calculateWeeklyProgress(allWorkouts, allNutrition);
+    setWeeklyProgress(progress);
+  };
+
+  const handleSaveWeeklyGoals = async (goals) => {
+    await saveWeeklyGoals(goals);
+    setWeeklyGoals(goals);
   };
 
   // Prepare chart data from historical logs
@@ -176,6 +274,14 @@ export const HomeScreen = () => {
         </View>
 
         <DateNavigation currentDate={date} onDateChange={setDate} />
+
+        <Badges badges={badges} />
+
+        <WeeklyGoals
+          goals={weeklyGoals}
+          progress={weeklyProgress}
+          onSaveGoals={handleSaveWeeklyGoals}
+        />
 
         {scoreData && (
           <ScoreDisplay score={scoreData.score} breakdown={scoreData.breakdown} />
@@ -235,8 +341,13 @@ export const HomeScreen = () => {
           </View>
         </View>
 
+        <NutritionLogger
+          onAddNutrition={handleAddNutrition}
+          nutritionLogs={nutritionLogs}
+        />
+
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Nutrition</Text>
+          <Text style={styles.sectionTitle}>Daily Nutrition Summary (for score calculation)</Text>
           <NumericInput
             label="Protein"
             value={protein}
@@ -272,7 +383,11 @@ export const HomeScreen = () => {
           </View>
         </View>
 
-        <WorkoutLogger onAddWorkout={handleAddWorkout} workouts={workouts} />
+        <WorkoutLogger
+          onAddWorkout={handleAddWorkout}
+          workouts={workouts}
+          activityNames={activityNames}
+        />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recovery</Text>
