@@ -12,10 +12,14 @@ import { StatusBar } from 'expo-status-bar';
 import { NumericInput } from '../components/NumericInput';
 import { ScoreDisplay } from '../components/ScoreDisplay';
 import { WorkoutLogger } from '../components/WorkoutLogger';
+import { DateNavigation } from '../components/DateNavigation';
+import { DailyComparison } from '../components/DailyComparison';
+import { TrendChart } from '../components/TrendChart';
 import { calculateDailyPerformanceScore } from '../utils/scoreCalculator';
 import {
   saveDailyLog,
   getDailyLog,
+  getDailyLogs,
   saveUserSettings,
   getUserSettings,
   saveWorkout,
@@ -23,7 +27,7 @@ import {
 } from '../utils/storage';
 
 export const HomeScreen = () => {
-  const [date] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   // User settings
   const [maintenance, setMaintenance] = useState('2000');
@@ -46,9 +50,17 @@ export const HomeScreen = () => {
   // Score
   const [scoreData, setScoreData] = useState(null);
 
+  // Historical data
+  const [allLogs, setAllLogs] = useState({});
+  const [yesterdayLog, setYesterdayLog] = useState(null);
+
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [date]);
 
   const loadData = async () => {
     // Load user settings
@@ -56,7 +68,11 @@ export const HomeScreen = () => {
     setMaintenance(settings.maintenance.toString());
     setGoal(settings.goal);
 
-    // Load today's log
+    // Load all logs for historical data
+    const logs = await getDailyLogs();
+    setAllLogs(logs);
+
+    // Load current date's log
     const log = await getDailyLog(date);
     if (log) {
       setProtein(log.protein?.toString() || '');
@@ -69,11 +85,28 @@ export const HomeScreen = () => {
       if (log.scoreData) {
         setScoreData(log.scoreData);
       }
+    } else {
+      // Clear form if no data for selected date
+      setProtein('');
+      setCalories('');
+      setSteps('');
+      setSleepHours('');
+      setDidLift(false);
+      setDidCardio(false);
+      setHighStress(false);
+      setScoreData(null);
     }
 
+    // Load yesterday's log for comparison
+    const yesterday = new Date(date);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDate = yesterday.toISOString().split('T')[0];
+    const yesterdayData = await getDailyLog(yesterdayDate);
+    setYesterdayLog(yesterdayData);
+
     // Load workouts
-    const todayWorkouts = await getWorkoutsForDate(date);
-    setWorkouts(todayWorkouts);
+    const dayWorkouts = await getWorkoutsForDate(date);
+    setWorkouts(dayWorkouts);
   };
 
   const handleCalculateScore = async () => {
@@ -112,6 +145,27 @@ export const HomeScreen = () => {
     setDidLift(true); // Auto-set lift toggle when workout is added
   };
 
+  // Prepare chart data from historical logs
+  const prepareChartData = (metric) => {
+    const sortedDates = Object.keys(allLogs).sort();
+    return sortedDates.map(d => ({
+      date: d,
+      value: metric === 'score'
+        ? allLogs[d].scoreData?.score || 0
+        : allLogs[d][metric] || 0
+    })).filter(d => d.value > 0);
+  };
+
+  const getCurrentLog = () => {
+    return {
+      protein: parseFloat(protein) || 0,
+      calories: parseFloat(calories) || 0,
+      steps: parseInt(steps) || 0,
+      sleepHours: parseFloat(sleepHours) || 0,
+      scoreData
+    };
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -119,17 +173,42 @@ export const HomeScreen = () => {
         <View style={styles.header}>
           <Text style={styles.title}>FlexLog</Text>
           <Text style={styles.subtitle}>Daily Performance Tracker</Text>
-          <Text style={styles.date}>{new Date(date).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}</Text>
         </View>
+
+        <DateNavigation currentDate={date} onDateChange={setDate} />
 
         {scoreData && (
           <ScoreDisplay score={scoreData.score} breakdown={scoreData.breakdown} />
         )}
+
+        {yesterdayLog && (
+          <DailyComparison today={getCurrentLog()} yesterday={yesterdayLog} />
+        )}
+
+        <TrendChart
+          data={prepareChartData('score')}
+          label="Performance Score Trend"
+          color="#2196F3"
+          suffix="/10"
+        />
+
+        <TrendChart
+          data={prepareChartData('sleepHours')}
+          label="Sleep Hours Trend"
+          color="#9C27B0"
+          suffix="h"
+        />
+
+        <TrendChart
+          data={prepareChartData('steps')}
+          label="Steps Trend"
+          color="#4CAF50"
+          suffix=""
+        />
+
+        <View style={styles.divider}>
+          <Text style={styles.dividerText}>Daily Inputs</Text>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
@@ -251,10 +330,16 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
-  date: {
-    fontSize: 14,
+  divider: {
+    marginVertical: 24,
+    alignItems: 'center',
+  },
+  dividerText: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#999',
-    marginTop: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   section: {
     backgroundColor: '#fff',
