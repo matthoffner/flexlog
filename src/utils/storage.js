@@ -3,7 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const STORAGE_KEYS = {
   DAILY_LOGS: '@flexlog_daily_logs',
   USER_SETTINGS: '@flexlog_user_settings',
-  WORKOUTS: '@flexlog_workouts'
+  WORKOUTS: '@flexlog_workouts',
+  NUTRITION_LOGS: '@flexlog_nutrition_logs',
+  WEEKLY_GOALS: '@flexlog_weekly_goals',
+  BADGES: '@flexlog_badges'
 };
 
 /**
@@ -137,11 +140,144 @@ export const clearAllData = async () => {
     await AsyncStorage.multiRemove([
       STORAGE_KEYS.DAILY_LOGS,
       STORAGE_KEYS.USER_SETTINGS,
-      STORAGE_KEYS.WORKOUTS
+      STORAGE_KEYS.WORKOUTS,
+      STORAGE_KEYS.NUTRITION_LOGS,
+      STORAGE_KEYS.WEEKLY_GOALS,
+      STORAGE_KEYS.BADGES
     ]);
     return true;
   } catch (error) {
     console.error('Error clearing data:', error);
     return false;
+  }
+};
+
+/**
+ * Save nutrition log entry (supports multiple per day)
+ */
+export const saveNutritionLog = async (date, nutritionData) => {
+  try {
+    const logs = await getNutritionLogs();
+    if (!logs[date]) {
+      logs[date] = [];
+    }
+    logs[date].push({
+      ...nutritionData,
+      timestamp: new Date().toISOString()
+    });
+    await AsyncStorage.setItem(STORAGE_KEYS.NUTRITION_LOGS, JSON.stringify(logs));
+    return true;
+  } catch (error) {
+    console.error('Error saving nutrition log:', error);
+    return false;
+  }
+};
+
+/**
+ * Get all nutrition logs
+ */
+export const getNutritionLogs = async () => {
+  try {
+    const logs = await AsyncStorage.getItem(STORAGE_KEYS.NUTRITION_LOGS);
+    return logs ? JSON.parse(logs) : {};
+  } catch (error) {
+    console.error('Error getting nutrition logs:', error);
+    return {};
+  }
+};
+
+/**
+ * Get nutrition logs for a specific date
+ */
+export const getNutritionLogsForDate = async (date) => {
+  try {
+    const logs = await getNutritionLogs();
+    return logs[date] || [];
+  } catch (error) {
+    console.error('Error getting nutrition logs for date:', error);
+    return [];
+  }
+};
+
+/**
+ * Get all unique activity names from workout history
+ */
+export const getUniqueActivityNames = async () => {
+  try {
+    const workouts = await getWorkouts();
+    const names = new Set();
+    Object.values(workouts).forEach(dayWorkouts => {
+      dayWorkouts.forEach(workout => {
+        if (workout.exercise) {
+          names.add(workout.exercise);
+        }
+      });
+    });
+    return Array.from(names).sort();
+  } catch (error) {
+    console.error('Error getting unique activity names:', error);
+    return [];
+  }
+};
+
+/**
+ * Save weekly goals
+ */
+export const saveWeeklyGoals = async (goals) => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.WEEKLY_GOALS, JSON.stringify(goals));
+    return true;
+  } catch (error) {
+    console.error('Error saving weekly goals:', error);
+    return false;
+  }
+};
+
+/**
+ * Get weekly goals
+ */
+export const getWeeklyGoals = async () => {
+  try {
+    const goals = await AsyncStorage.getItem(STORAGE_KEYS.WEEKLY_GOALS);
+    return goals ? JSON.parse(goals) : {
+      workouts: 0,
+      totalReps: 0,
+      protein: 0,
+      calories: 0
+    };
+  } catch (error) {
+    console.error('Error getting weekly goals:', error);
+    return {
+      workouts: 0,
+      totalReps: 0,
+      protein: 0,
+      calories: 0
+    };
+  }
+};
+
+/**
+ * Save badges
+ */
+export const saveBadges = async (badges) => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.BADGES, JSON.stringify(badges));
+    return true;
+  } catch (error) {
+    console.error('Error saving badges:', error);
+    return false;
+  }
+};
+
+/**
+ * Get badges
+ */
+export const getBadges = async () => {
+  try {
+    const badges = await AsyncStorage.getItem(STORAGE_KEYS.BADGES);
+    return badges ? JSON.parse(badges) : [];
+  } catch (error) {
+    console.error('Error getting badges:', error);
+    return [];
   }
 };
