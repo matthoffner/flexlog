@@ -88,13 +88,16 @@ export const calculateActivity = (steps, didLift = false, didCardio = false) => 
 };
 
 /**
- * Calculate Recovery score based on sleep hours and stress level
+ * Calculate Recovery score based on sleep minutes and stress level
  *
- * @param {number} sleepHours - Hours of sleep
+ * @param {number} sleepMinutes - Minutes of sleep
  * @param {boolean} highStress - Whether stress level is high
  * @returns {number} Recovery score (0.8 - 1.0)
  */
-export const calculateRecovery = (sleepHours, highStress = false) => {
+export const calculateRecovery = (sleepMinutes, highStress = false) => {
+  // Convert minutes to hours for calculation
+  const sleepHours = sleepMinutes / 60;
+
   if (highStress || sleepHours < 6) {
     return 0.8;
   } else if (sleepHours >= 6 && sleepHours < 7) {
@@ -117,7 +120,7 @@ export const calculateRecovery = (sleepHours, highStress = false) => {
  * @param {number} data.steps - Daily step count
  * @param {boolean} data.didLift - Whether weight lifting was done
  * @param {boolean} data.didCardio - Whether cardio was done
- * @param {number} data.sleepHours - Hours of sleep
+ * @param {number} data.sleepMinutes - Minutes of sleep
  * @param {boolean} data.highStress - Whether stress level is high
  * @returns {Object} Score breakdown and total
  */
@@ -130,14 +133,14 @@ export const calculateDailyPerformanceScore = (data) => {
     steps = 0,
     didLift = false,
     didCardio = false,
-    sleepHours = 7,
+    sleepMinutes = 420,
     highStress = false
   } = data;
 
   const nutrition = calculateNutrition(protein, calories);
   const energy = calculateEnergy(calories, maintenance, goal);
   const activity = calculateActivity(steps, didLift, didCardio);
-  const recovery = calculateRecovery(sleepHours, highStress);
+  const recovery = calculateRecovery(sleepMinutes, highStress);
 
   // Calculate final score
   const score = (nutrition * energy * activity * recovery) * 10;

@@ -56,7 +56,7 @@ export const DailyComparison = ({ today, yesterday }) => {
         )
       )}
 
-      {renderMetric('Sleep', today?.sleepHours, yesterday?.sleepHours, 'h')}
+      {renderMetric('Sleep', today?.sleepMinutes, yesterday?.sleepMinutes, 'm')}
       {renderMetric('Steps', today?.steps, yesterday?.steps, '')}
       {renderMetric('Protein', today?.protein, yesterday?.protein, 'g')}
       {renderMetric('Calories', today?.calories, yesterday?.calories, '')}
