@@ -55,7 +55,7 @@ export const HomeScreen = () => {
   const [protein, setProtein] = useState('');
   const [calories, setCalories] = useState('');
   const [steps, setSteps] = useState('');
-  const [sleepHours, setSleepHours] = useState('');
+  const [sleepMinutes, setSleepMinutes] = useState('');
 
   // Toggles
   const [didLift, setDidLift] = useState(false);
@@ -117,7 +117,7 @@ export const HomeScreen = () => {
       setProtein(log.protein?.toString() || '');
       setCalories(log.calories?.toString() || '');
       setSteps(log.steps?.toString() || '');
-      setSleepHours(log.sleepHours?.toString() || '');
+      setSleepMinutes(log.sleepMinutes?.toString() || '');
       setDidLift(log.didLift || false);
       setDidCardio(log.didCardio || false);
       setHighStress(log.highStress || false);
@@ -129,7 +129,7 @@ export const HomeScreen = () => {
       setProtein('');
       setCalories('');
       setSteps('');
-      setSleepHours('');
+      setSleepMinutes('');
       setDidLift(false);
       setDidCardio(false);
       setHighStress(false);
@@ -189,7 +189,7 @@ export const HomeScreen = () => {
       steps: parseInt(steps) || 0,
       didLift,
       didCardio,
-      sleepHours: parseFloat(sleepHours) || 7,
+      sleepMinutes: parseFloat(sleepMinutes) || 420,
       highStress
     };
 
@@ -259,7 +259,7 @@ export const HomeScreen = () => {
       protein: parseFloat(protein) || 0,
       calories: parseFloat(calories) || 0,
       steps: parseInt(steps) || 0,
-      sleepHours: parseFloat(sleepHours) || 0,
+      sleepMinutes: parseFloat(sleepMinutes) || 0,
       scoreData
     };
   };
@@ -299,10 +299,10 @@ export const HomeScreen = () => {
         />
 
         <TrendChart
-          data={prepareChartData('sleepHours')}
-          label="Sleep Hours Trend"
+          data={prepareChartData('sleepMinutes')}
+          label="Sleep Minutes Trend"
           color="#9C27B0"
-          suffix="h"
+          suffix="m"
         />
 
         <TrendChart
@@ -392,11 +392,11 @@ export const HomeScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recovery</Text>
           <NumericInput
-            label="Sleep Hours"
-            value={sleepHours}
-            onChangeText={setSleepHours}
-            placeholder="7.5"
-            unit="hours"
+            label="Sleep Last Night (Yesterday's Sleep)"
+            value={sleepMinutes}
+            onChangeText={setSleepMinutes}
+            placeholder="450"
+            unit="minutes"
           />
           <View style={styles.toggleRow}>
             <Text style={styles.toggleLabel}>High Stress</Text>
